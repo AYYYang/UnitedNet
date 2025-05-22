@@ -380,7 +380,18 @@ def run_train(model, dataloader_train, dataloader_val, verbose=False):
             metrics = run_evaluate(model, dataloader_val)
             print("\n")
             headers = ["Metrics", "Value"]
-            values = list(metrics.items())
+            # values = list(metrics.items())
+            # print(tabulate(values, headers=headers))
+            formatted_metrics = {}
+            for key, value in metrics.items():
+                if isinstance(value, np.ndarray):
+                    if value.size > 6:  # If array is large, just show shape
+                        formatted_metrics[key] = f"Array shape: {value.shape}"
+                    else:
+                        formatted_metrics[key] = str(value)
+                else:
+                    formatted_metrics[key] = value
+            values = list(formatted_metrics.items())
             print(tabulate(values, headers=headers))
 
 

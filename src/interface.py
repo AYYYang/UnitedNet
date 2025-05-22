@@ -2,7 +2,6 @@ from ast import ExtSlice
 from email.policy import default
 import numpy as np
 import os
-import random
 import torch
 from sklearn.utils import class_weight
 
@@ -10,10 +9,10 @@ from src.data import create_dataloader, create_joint_dataloader
 from src.scripts import *
 from src.configs import *
 from src.constants import *
-from src.modules import Model,kaiming_init_weights
+from src.modules import Model
 
 class UnitedNet:
-    def __init__(self, save_path=None, device="cpu", technique=default_config):
+    def __init__(self, save_path=None, device="mps", technique=default_config):
         if save_path is not None:
             os.makedirs(save_path, exist_ok=True)
         self.save_path = save_path
@@ -139,6 +138,6 @@ class UnitedNet:
         dataloader = create_dataloader(self.model, adatas, shuffle=False, )
         return run_predict_label(self.model, dataloader)
 
-    def load_model(self, path, device='cuda:0'):
-        self.model = torch.load(path,map_location=torch.device(device))
+    def load_model(self, path, device='mps'):
+        self.model = torch.load(path,map_location=torch.device(device), weights_only = False)
 

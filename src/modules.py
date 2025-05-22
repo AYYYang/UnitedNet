@@ -2,8 +2,6 @@ from sklearn import preprocessing
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import numpy as np
-import random
 from src.constants import *
 
 class MLP(nn.Module):
@@ -85,12 +83,15 @@ class Model(nn.Module):
         self.input_dims = None
         self.config = config
         self.label_encoder = preprocessing.LabelEncoder()
+        # Using multiple heads enables the model to learn different aspects of the relationships within the data.
+        # A higher n_head value potentially increases the model's capacity to capture complex patterns, but it also increases computational cost and memory usage. 
         self.n_head = config[str_n_head]
         self.n_modality = len(config[str_encoders])
         self.noise_level = config[str_noise]
-        self.register_buffer(str_best_head, torch.tensor(0, dtype=torch.long))
+        self.register_buffer(str_best_head, torch.tensor(0, dtype=torch.long)) # used to keep track of the best head (learnt way of representing the data)
         self.potential_best_head = []
         self.register_buffer("head_flag", torch.tensor(0, dtype=torch.long))
+        # TODO: bookmark here
         self.encoders = nn.ModuleList(
             [MLP(encoder) for encoder in config[str_encoders]]
         )
