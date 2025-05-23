@@ -35,6 +35,7 @@ class EncoderOnlySchedule:
             # Only include parameters needed for clustering
             self.parameters = chain.from_iterable(
                 [
+                    model.encoders.parameters(),
                     model.fusers.parameters(),
                     model.projectors.parameters(),
                     model.clusters.parameters(),
