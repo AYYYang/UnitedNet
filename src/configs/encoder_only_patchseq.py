@@ -5,8 +5,8 @@ encoder_only_patchseq_config = {
     "train_batch_size": 16,
     "finetune_batch_size": 16,
     "transfer_batch_size": None,
-    "train_epochs": 50,  # More epochs since we have fewer components
-    "finetune_epochs": 30,
+    "train_epochs": 50,
+    "finetune_epochs": 20,
     "transfer_epochs": None,
     "train_task": str_unsupervised_group_identification,
     "finetune_task": str_unsupervised_group_identification,
@@ -14,7 +14,7 @@ encoder_only_patchseq_config = {
     
     # Loss weights optimized for encoder-only clustering
     "train_loss_weight": {
-        str_self_entropy_loss: 0.1,    # Prevent trivial solutions
+        str_self_entropy_loss: 0.5,    # Penalize harder as dataset is imbalanced
         str_ddc_loss: 1.0,             # Main clustering loss
         str_contrastive_loss: 0.5,     # Multi-modal alignment
     },

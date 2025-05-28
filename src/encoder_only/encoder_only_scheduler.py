@@ -32,10 +32,9 @@ class EncoderOnlySchedule:
             self.losses = [CrossEntropyLoss(model, loss_weight)]
             self.best_loss_term = str_cross_entropy_loss
         elif name == str_clustering:
-            # Only include parameters needed for clustering
             self.parameters = chain.from_iterable(
                 [
-                    model.encoders.parameters(),
+                    model.encoders.parameters(), # update the encoders parameters during clustering 
                     model.fusers.parameters(),
                     model.projectors.parameters(),
                     model.clusters.parameters(),

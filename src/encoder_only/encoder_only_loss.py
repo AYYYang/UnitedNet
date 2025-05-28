@@ -1,7 +1,56 @@
 import torch
 import torch.nn.functional as F
 from src.constants import *
-from src.loss import BaseLoss, SelfEntropyLoss, DDCLoss, CrossEntropyLoss
+from src.loss import BaseLoss, DDCLoss, CrossEntropyLoss
+
+class SelfEntropyLoss(BaseLoss):
+    name = str_self_entropy_loss
+    """
+    Enhanced Entropy regularization to prevent trivial solution and also penalize harder for imbalanced datasets.
+    """
+
+    def __init__(self, model,loss_weight):
+        super().__init__(model)
+        if loss_weight is not None and str_self_entropy_loss in loss_weight:
+            self.weight = loss_weight[str_self_entropy_loss]
+        else:
+            self.weight = 0.5  # Increase default weight from 0.1 to 0.5
+        self.prob_layer = torch.nn.Softmax(dim=1)
+        self.target_utilization = 1.0 / self.n_output  # Ideal uniform distribution
+
+    def __call__(self, model):
+        eps = 1e-8
+        total_loss = 0
+        head_losses = []
+
+        for cluster_outputs in model.cluster_outputs:
+            # Apply softmax to get cluster probabilities
+            cluster_outputs = self.prob_layer(cluster_outputs)
+
+            # Calculate mean probability for each cluster across batch
+            prob_mean = cluster_outputs.mean(dim=0)
+            prob_mean[(prob_mean < eps).data] = eps
+            
+
+            # Traditional entropy loss
+            entropy_loss = (prob_mean * torch.log(prob_mean)).sum()
+
+            # Add utilization penalty - KL divergence from uniform distribution
+            uniform_target = torch.ones_like(prob_mean) * self.target_utilization
+            utilization_loss = torch.sum(uniform_target * torch.log(uniform_target / prob_mean))
+            
+            # Combined traditional entropy loss and utilization loss
+            loss = entropy_loss + utilization_loss
+
+            loss /= model.n_head
+            loss *= self.weight
+
+            total_loss += loss
+            head_losses.append(loss)
+
+        return total_loss, head_losses
+
+
 
 class ContrastiveLoss(BaseLoss):
     """\

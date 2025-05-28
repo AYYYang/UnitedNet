@@ -111,9 +111,16 @@ class EncoderOnlyModel(nn.Module):
         # Normalize cluster weights
         with torch.no_grad():
             for pt_i in range(self.n_head):
-                w = getattr(self.clusters[pt_i], "layers")[0].weight.data.clone()
-                w = nn.functional.normalize(w, dim=1, p=2)
-                getattr(self.clusters[pt_i], "layers")[0].weight.copy_(w)
+                cluster_layer = getattr(self.clusters[pt_i], "layers")[0]
+                w = cluster_layer.weight.data.clone()
+                
+                # Soft normalization - only if weights become too large
+                weight_norms = torch.norm(w, dim=1, keepdim=True)
+                max_norm = 2.0  # Allow some flexibility
+                w = torch.where(weight_norms > max_norm, 
+                            w * max_norm / weight_norms, w)
+                cluster_layer.weight.copy_(w)
+        
 
         # Fuse modalities
         self.fused_latents = [fuser(self.latents) for fuser in self.fusers]
@@ -243,6 +250,7 @@ class EncoderOnlyUnitedNet:
             fit_label=True,
         )
         
+        # None for unsupervised training
         if adatas_val is None:
             adatas_val = adatas_train
             
@@ -253,6 +261,7 @@ class EncoderOnlyUnitedNet:
             batch_size=self.model.config[str_train_batch_size],
         )
         
+        # Reset all components other than the encoders
         if init_classify:
             self.model.reset_classify()
             self._set_device()
