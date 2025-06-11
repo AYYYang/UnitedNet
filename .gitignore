@@ -154,4 +154,7 @@ cython_debug/
 
 ## Intermediate results
 notebooks/saved_results/*
+notebooks/figures/*
+saved_results/*
+*.csv
 .DS_Store
