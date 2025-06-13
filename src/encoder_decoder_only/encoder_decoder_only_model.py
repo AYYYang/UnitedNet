@@ -90,15 +90,14 @@ class EncoderDecoderOnlyModel(nn.Module):
 
     def forward(self, modalities, labels=None):
         """
-        Forward pass for decoder-encoder-only model
-        Returns: (translations_with_proper_structure, predictions, fused_latents)
+        Forward pass for encoder-decoder-only model focused on clustering
+        but with reconstruction to preserve biological nuances
         """
         modalities = self.impute_check(modalities)
         modalities = [
             modality.to(device=self.device_in_use) for modality in modalities
         ]
 
-        # Add noise if specified
         if self.noise_level is not None:
             self.modalities = self.add_noise(inputs=modalities, levels=self.noise_level, device=self.device_in_use)
         else:
@@ -123,7 +122,11 @@ class EncoderDecoderOnlyModel(nn.Module):
         
         self.latent_projection = self.latent_projector(torch.cat(self.latents, dim=0))
 
-        # Fuse modalities
+        self.translations = [
+            [decoder(latent) for latent in self.latents] for decoder in self.decoders
+        ]
+
+        # Fuse modalities for clustering
         self.fused_latents = [fuser(self.latents) for fuser in self.fusers]
 
         # Project fused representations
@@ -143,30 +146,10 @@ class EncoderDecoderOnlyModel(nn.Module):
             for cluster_outputs in self.cluster_outputs
         ]
 
-        # Create proper translation structure that matches expected format
-        # Each modality should have translations to all modalities (including itself)
-        translations_outputs = []
-        for i in range(self.n_modality):
-            modality_translations = []
-            for j in range(self.n_modality):
-                if i == j:
-                    # Self-reconstruction - use the original modality
-                    if self.training:
-                        modality_translations.append(self.modalities[i])
-                    else:
-                        modality_translations.append(self.modalities[i].cpu().numpy())
-                else:
-                    # Cross-modal translation - use zeros as placeholder
-                    if self.training:
-                        modality_translations.append(torch.zeros_like(self.modalities[j]))
-                    else:
-                        modality_translations.append(torch.zeros_like(self.modalities[j]).cpu().numpy())
-            translations_outputs.append(modality_translations)
-        
         return (
             [
-                [trans_lb if self.training else trans_lb.cpu().numpy() for trans_lb in trans_la] for
-                trans_la in self.translations
+                [trans_lb if self.training else trans_lb.cpu().numpy() for trans_lb in trans_la] 
+                for trans_la in self.translations
             ],
             self.predictions[self.best_head] if self.training else self.predictions[self.best_head].cpu().numpy(),
             self.fused_latents[self.best_head] if self.training else self.fused_latents[self.best_head].cpu().numpy(),

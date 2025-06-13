@@ -1,11 +1,11 @@
 from src.constants import *
 
 # Encoder-only configuration for PatchSeq
-encoder_only_patchseq_config = {
+encoder_decoder_only_patchseq_config = {
     "train_batch_size": 16,
     "finetune_batch_size": 16,
     "transfer_batch_size": None,
-    "train_epochs": 50,
+    "train_epochs": 80,
     "finetune_epochs": 20,
     "transfer_epochs": None,
     "train_task": str_unsupervised_group_identification, # TODO: replace with str_cross_model_prediction_clus?
@@ -14,9 +14,10 @@ encoder_only_patchseq_config = {
     
     # Loss weights optimized for encoder-only clustering
     "train_loss_weight": {
-        str_self_entropy_loss: 0.5,    # Penalize harder as dataset is imbalanced
-        str_ddc_loss: 1.0,             # Main clustering loss
-        str_contrastive_loss: 0.5,     # Multi-modal alignment
+        str_self_entropy_loss: 0.05,    # Penalize harder as dataset is imbalanced
+        str_ddc_loss: 0.1,             # Main clustering loss
+        str_contrastive_loss: 0.1,     # Multi-modal alignment
+        str_reconstruction_loss: 1.0, # Forces preservation of input details
     },
     "finetune_loss_weight": {
         str_self_entropy_loss: 0.05,   # Reduce entropy regularization in fine-tuning
@@ -25,8 +26,8 @@ encoder_only_patchseq_config = {
     },
     "transfer_loss_weight": None,
     
-    "lr": 0.001,
-    "checkpoint": 5,  # Save checkpoints more frequently
+    "lr": 0.0001,
+    "checkpoint": 10,  # Save checkpoints more frequently
     "n_head": 10,
     "fuser_type": "WeightedFeatureMean",
     "noise_level": [0, 0, 0.01],  # Light noise on morphology only
@@ -72,6 +73,7 @@ encoder_only_patchseq_config = {
     ],
     
     # Projectors - maps fused features to clustering space
+    # TODO: might add another layer?
     "projectors": {
         "input": 68,
         "hiddens": [128],  # Added hidden layer for better representation
@@ -94,8 +96,7 @@ encoder_only_patchseq_config = {
         "use_batch_norms": [False],
         "use_layer_norms": [False],
     },
-    
-    # Latent projector for contrastive learning
+
     "latent_projector": {
         "input": 68,
         "hiddens": [128],
