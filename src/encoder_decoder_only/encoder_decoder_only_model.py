@@ -222,6 +222,7 @@ class EncoderDecoderOnlyUnitedNet:
             self.model.save_path = save_path
             
         if str_label in adatas_train[0].obs.keys():
+            print('Enter supervised learning')
             labels = adatas_train[0].obs[str_label]
             self.model.class_weights = list(
                 class_weight.compute_class_weight(

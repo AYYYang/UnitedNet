@@ -94,7 +94,7 @@ class EncoderDecoderOnlySchedule:
         if self.best_loss_term is None:
             curr_loss = sum(losses.values())
         else:
-            if self.best_loss_term in [str_self_entropy_loss, str_ddc_loss]:
+            if self.best_loss_term in [str_self_entropy_loss, str_ddc_loss, str_cross_entropy_loss]:
                 curr_loss = losses[f'{self.best_loss_term}_head_{model.best_head}']
             else:
                 curr_loss = losses[self.best_loss_term]
@@ -112,16 +112,14 @@ def encoder_decoder_only_run_train(model, dataloader_train, dataloader_val, verb
     """
     Training function specifically for decoder-encoder-only model
     """
-    print("Training encoder-decoder-only model for unsupervised clustering")
     
     # Force the task to be clustering for encoder-only model
-    model.config[str_train_task] = str_unsupervised_group_identification
-    
     task = model.config[str_train_task]
     loss_weight = model.config[str_train_loss_weight]
     
+    print(f"Training encoder-decoder-only model for {task} classification")
     # Create clustering schedule
-    schedule = EncoderDecoderOnlySchedule(str_clustering, model, str_train, loss_weight)
+    schedule = EncoderDecoderOnlySchedule(task, model, str_train, loss_weight)
     
     for epoch in tqdm(range(model.config[str_train_epochs])):
         epoch += 1

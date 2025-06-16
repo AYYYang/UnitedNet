@@ -5,19 +5,19 @@ encoder_decoder_only_patchseq_config = {
     "train_batch_size": 16,
     "finetune_batch_size": 16,
     "transfer_batch_size": None,
-    "train_epochs": 80,
+    "train_epochs": 20,
     "finetune_epochs": 20,
     "transfer_epochs": None,
-    "train_task": str_unsupervised_group_identification, # TODO: replace with str_cross_model_prediction_clus?
-    "finetune_task": str_unsupervised_group_identification,
+    "train_task": str_classification,
+    "finetune_task": str_classification,
     "transfer_task": None,
     
     # Loss weights optimized for encoder-only clustering
     "train_loss_weight": {
-        str_self_entropy_loss: 0.05,    # Penalize harder as dataset is imbalanced
-        str_ddc_loss: 0.1,             # Main clustering loss
-        str_contrastive_loss: 0.1,     # Multi-modal alignment
-        str_reconstruction_loss: 1.0, # Forces preservation of input details
+        str_self_entropy_loss: 0.05,    
+        str_ddc_loss: 0.1,             
+        str_contrastive_loss: 0.1,     
+        str_reconstruction_loss: 1.0, 
     },
     "finetune_loss_weight": {
         str_self_entropy_loss: 0.05,   # Reduce entropy regularization in fine-tuning
@@ -26,7 +26,7 @@ encoder_decoder_only_patchseq_config = {
     },
     "transfer_loss_weight": None,
     
-    "lr": 0.0001,
+    "lr": 0.001,
     "checkpoint": 10,  # Save checkpoints more frequently
     "n_head": 10,
     "fuser_type": "WeightedFeatureMean",
